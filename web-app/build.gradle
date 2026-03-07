@@ -1,0 +1,45 @@
+plugins {
+	id 'java-conventions'
+	id 'io.openliberty.tools.gradle.Liberty'
+	id 'war'
+}
+
+dependencies {
+	providedCompile 'javax:javaee-web-api:7.0'
+
+	libertyRuntime 'com.ibm.websphere.appserver.runtime:wlp-webProfile7:26.0.0.2'
+}
+
+// =====================================================
+// Liberty設定
+// =====================================================
+// libertyの実行に使用するJVMの設定
+def wlpJavaLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(libertyJavaVersion)
+}
+tasks.withType(io.openliberty.tools.gradle.tasks.AbstractLibertyTask).configureEach { t ->
+	t.javaLauncher = wlpJavaLauncher.get()
+}
+
+// https://github.com/OpenLiberty/ci.gradle/blob/main/docs/libertyExtensions.md
+liberty {
+	//installDir = rootProject.layout.projectDirectory.dir('/.libertyRuntime/wlp')
+	baseDir = rootProject.layout.projectDirectory.dir('/.libertyRuntime')
+	server {
+		// 開発時はwar毎に１つのサーバーを占有させる必要があるのでプロジェクト名からサーバー名を作成する
+		name = "${project.name}-server"
+
+		// warのファイル名にバージョンが含まれている場合は無視する
+		stripVersion = true
+
+		// server.envとenvプロパティをマージする（同じキーがある場合、envプロパティが優先される）
+		mergeServerEnv = true
+		env = [
+		]
+
+		// デプロイメントの設定
+		deploy {
+			dropins = [war]
+		}
+	}
+}

@@ -1,0 +1,5 @@
+-Dstdout.encoding=UTF-8
+-Dstderr.encoding=UTF-8
+-Dfile.encoding=UTF-8
+-Xms256m
+-Xmx1024m
