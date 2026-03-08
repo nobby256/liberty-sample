@@ -14,11 +14,12 @@ dependencies {
 // Liberty設定
 // =====================================================
 // libertyの実行に使用するJVMの設定
-def wlpJavaLauncher = javaToolchains.launcherFor {
+def wlpJavaLauncherProvider = javaToolchains.launcherFor {
     languageVersion = JavaLanguageVersion.of(libertyJavaVersion)
 }
+def wlpJavaLauncher = wlpJavaLauncherProvider.get()
 tasks.withType(io.openliberty.tools.gradle.tasks.AbstractLibertyTask).configureEach { t ->
-	t.javaLauncher = wlpJavaLauncher.get()
+	t.javaLauncher = wlpJavaLauncher
 }
 
 // https://github.com/OpenLiberty/ci.gradle/blob/main/docs/libertyExtensions.md
@@ -41,5 +42,56 @@ liberty {
 		// deploy {
 		// 	dropins = [war]
 		// }
+		features {
+			name = ['webProfile-6.0']
+			acceptLicense = true
+        }
 	}
+	dev {
+        skipInstallFeature = true
+    }
+	// install {
+	// 	licenseCode = 'L-MCAO-9SYMVC'
+	// 	version = '8.5.5_09'
+	// 	type = 'webProfile7'
+	// 	useOpenLiberty = false
+	// }		
+}
+
+if (findProperty('installLiberty855') == 'true') {
+liberty {
+	install {
+		licenseCode = 'L-MCAO-9SYMVC'
+		version = '8.5.5_09'
+		type = 'webProfile7'
+		useOpenLiberty = false
+	}		
+}
+tasks.named("installFeature") {
+	enabled = false
+}
+tasks.register('installFeatureForJava8', Exec) {
+    // liberty拡張から各種設定を取得
+    def libertyExt = project.extensions["liberty"]
+
+    // baseDir / installDir を解決（installDir 未設定なら baseDir/wlp）
+    def baseDir    = libertyExt.baseDir ? file(libertyExt.baseDir) : project.layout.buildDirectory.get().asFile
+    def installDir = libertyExt.installDir ? file(libertyExt.installDir) : file("$baseDir/wlp")
+
+    // server extension からサーバー名を取得（未設定なら defaultServer）
+    def serverExt  = libertyExt.server
+    def serverName = serverExt?.name ?: 'defaultServer'
+
+    // Java 8 toolchain から javaHome を解決
+    def launcher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    }.get()
+    def javaHome = launcher.metadata.installationPath.asFile
+
+    workingDir file("$installDir/bin")
+    environment 'JAVA_HOME', javaHome.absolutePath
+    environment 'JAVA_TOOL_OPTIONS', '-Dfile.encoding=UTF-8'
+
+	commandLine 'cmd', '/c', "installUtility.bat install --acceptLicense ${serverName}"
+}
 }
