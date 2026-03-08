@@ -38,8 +38,8 @@ liberty {
 		]
 
 		// デプロイメントの設定
-		deploy {
-			dropins = [war]
-		}
+		// deploy {
+		// 	dropins = [war]
+		// }
 	}
 }
