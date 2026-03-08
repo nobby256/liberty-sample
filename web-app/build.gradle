@@ -7,7 +7,7 @@ plugins {
 dependencies {
 	providedCompile 'javax:javaee-web-api:7.0'
 
-	libertyRuntime 'com.ibm.websphere.appserver.runtime:wlp-webProfile7:26.0.0.2'
+	//libertyRuntime 'com.ibm.websphere.appserver.runtime:wlp-webProfile7:26.0.0.2'
 }
 
 // =====================================================
@@ -32,30 +32,10 @@ liberty {
 
 		// warのファイル名にバージョンが含まれている場合は無視する
 		stripVersion = true
-
-		// server.envとenvプロパティをマージする（同じキーがある場合、envプロパティが優先される）
-		mergeServerEnv = true
-		env = [
-		]
-
-		// デプロイメントの設定
-		// deploy {
-		// 	dropins = [war]
-		// }
-		features {
-			name = ['webProfile-6.0']
-			acceptLicense = true
-        }
 	}
 	dev {
         skipInstallFeature = true
     }
-	// install {
-	// 	licenseCode = 'L-MCAO-9SYMVC'
-	// 	version = '8.5.5_09'
-	// 	type = 'webProfile7'
-	// 	useOpenLiberty = false
-	// }		
 }
 
 if (findProperty('installLiberty855') == 'true') {
@@ -94,4 +74,7 @@ tasks.register('installFeatureForJava8', Exec) {
 
 	commandLine 'cmd', '/c', "installUtility.bat install --acceptLicense ${serverName}"
 }
+// tasks.named('libertyCreate') {
+//     finalizedBy 'installFeatureForJava8'
+// }
 }
